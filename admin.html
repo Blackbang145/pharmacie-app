@@ -13,7 +13,7 @@
     }
     .container { max-width: 950px; margin: auto; }
     
-    .header { display: flex; justify-space-between; align-items: center; margin-bottom: 32px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
     h1 { font-size: 26px; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 12px; }
     
     .btn-refresh { 
@@ -91,6 +91,7 @@
     const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
 
     function decodeUTF8(base64Str) {
+      if (!base64Str) return JSON.stringify({ employes: [], pointages: [] });
       const cleanBase64 = base64Str.replace(/\n/g, '');
       const binaryString = atob(cleanBase64);
       const bytes = new Uint8Array(binaryString.length);
@@ -106,11 +107,13 @@
 
         if (!res.ok) throw new Error("Erreur de connexion.");
         const fileData = await res.json();
-        const data = JSON.parse(decodeUTF8(fileData.content));
+        const contentStr = decodeUTF8(fileData.content);
+        const data = JSON.parse(contentStr || '{"employes":[],"pointages":[]}');
 
         afficherPresences(data.employes || [], data.pointages || []);
         afficherHeures(data.employes || [], data.pointages || []);
       } catch (e) {
+        console.error(e);
         alert("Erreur lors de la récupération des données.");
       }
     }
@@ -120,7 +123,7 @@
       tbody.innerHTML = '';
 
       if (employes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="color: #64748b;">Aucun employé dans le système.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="color: #64748b;">Aucun employé enregistré.</td></tr>';
         return;
       }
 
