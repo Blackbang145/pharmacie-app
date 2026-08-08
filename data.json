@@ -6,6 +6,13 @@
       "prenom": "dave",
       "pin": "4444",
       "heures_contrat": 160
+    },
+    {
+      "id": 2,
+      "nom": "koffi",
+      "prenom": "dave",
+      "pin": "4444",
+      "heures_contrat": 160
     }
   ],
   "pointages": []
