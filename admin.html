@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Direction - Pharmacie</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: white; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: auto; }
+    h1 { color: #38bdf8; text-align: center; }
+    .card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+    th { background: #0f172a; color: #94a3b8; }
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+    .badge-present { background: #065f46; color: #34d399; }
+    .badge-absent { background: #7f1d1d; color: #f87171; }
+    .badge-auto { background: #78350f; color: #fbbf24; }
+    .btn-refresh { background: #38bdf8; color: #0f172a; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <button class="btn-refresh" onclick="chargerDonnees()">🔄 Actualiser</button>
+    <h1>Dashboard Direction</h1>
+
+    <div class="card">
+      <h2>Présences en Direct</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Employé</th>
+            <th>Statut</th>
+            <th>Dernier Mouvement</th>
+            <th>Mode Clôture</th>
+          </tr>
+        </thead>
+        <tbody id="tablePresences">
+          <tr><td colspan="4">Chargement des données...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Cumul des Heures Effectuées</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Employé</th>
+            <th>Total Heures</th>
+            <th>Contrat Mensuel</th>
+          </tr>
+        </thead>
+        <tbody id="tableCumul">
+          <tr><td colspan="3">Chargement des données...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION GITHUB
+    // ==========================================
+    const GITHUB_USER = "Blackbang145";
+    const GITHUB_REPO = "pharmacie-app";
+    // ==========================================
+
+    async function chargerDonnees() {
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/data.json?cache=${Date.now()}`);
+        const data = await res.json();
+
+        const employes = data.employes || [];
+        const pointages = data.pointages || [];
+
+        afficherPresences(employes, pointages);
+        afficherHeures(employes, pointages);
+      } catch (e) {
+        alert("Erreur lors de la récupération du fichier data.json.");
+      }
+    }
+
+    function afficherPresences(employes, pointages) {
+      const tbody = document.getElementById('tablePresences');
+      tbody.innerHTML = '';
+
+      if (employes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Aucun employé inscrit pour le moment.</td></tr>';
+        return;
+      }
+
+      employes.forEach(emp => {
+        const pEmp = pointages.filter(p => p.employe_id === emp.id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const dernier = pEmp[0];
+        const estPresent = dernier && dernier.action === 'START';
+
+        let row = `<tr>
+          <td><b>${emp.prenom} ${emp.nom}</b></td>
+          <td><span class="badge ${estPresent ? 'badge-present' : 'badge-absent'}">${estPresent ? 'PRÉSENT' : 'ABSENT'}</span></td>
+          <td>${dernier ? new Date(dernier.timestamp).toLocaleString('fr-FR') : 'Aucun pointage'}</td>
+          <td>${dernier && dernier.mode === 'AUTO_WIFI' ? '<span class="badge badge-auto">STOP AUTO (Wi-Fi)</span>' : (dernier ? dernier.mode : '-')}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function afficherHeures(employes, pointages) {
+      const tbody = document.getElementById('tableCumul');
+      tbody.innerHTML = '';
+
+      if (employes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Aucun employé inscrit pour le moment.</td></tr>';
+        return;
+      }
+
+      employes.forEach(emp => {
+        const pEmp = pointages.filter(p => p.employe_id === emp.id).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
+        let totalMs = 0;
+        let startTemp = null;
+
+        pEmp.forEach(p => {
+          if (p.action === 'START') {
+            startTemp = new Date(p.timestamp);
+          } else if (p.action === 'STOP' && startTemp) {
+            totalMs += (new Date(p.timestamp) - startTemp);
+            startTemp = null;
+          }
+        });
+
+        const totalHeures = (totalMs / (1000 * 60 * 60)).toFixed(1);
+
+        let row = `<tr>
+          <td>${emp.prenom} ${emp.nom}</td>
+          <td><b>${totalHeures} h</b></td>
+          <td>${emp.heures_contrat || 160} h / mois</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    chargerDonnees();
+  </script>
+</body>
+</html>

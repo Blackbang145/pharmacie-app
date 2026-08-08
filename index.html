@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pointage Pharmacie</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; text-align: center; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 380px; margin: auto; }
+    h2 { color: #10b981; margin-bottom: 15px; }
+    select, input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+    .btn-start { background: #10b981; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .btn-stop { background: #ef4444; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .btn-secondary { background: #2563eb; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
+    .online { background: #d1fae5; color: #065f46; }
+    .offline { background: #fee2e2; color: #991b1b; }
+    .loading { opacity: 0.5; pointer-events: none; }
+    .toggle-link { color: #2563eb; text-decoration: underline; font-size: 14px; cursor: pointer; margin-top: 12px; display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="mainCard">
+    <h2>Pharmacie - Pointage</h2>
+    <div id="statusBadge" class="status-badge offline">HORS SERVICE</div>
+
+    <!-- 1. ÉCRAN DE CONNEXION -->
+    <div id="loginForm">
+      <select id="selectEmploye">
+        <option value="">-- Sélectionnez votre nom --</option>
+      </select>
+      <input type="password" id="inputPin" placeholder="Code PIN à 4 chiffres" maxlength="4">
+      <button class="btn-start" onclick="validerIdentite()">VALIDER</button>
+      <span class="toggle-link" onclick="afficherFormulaire('registerForm')">Nouveau ? Créer un compte</span>
+    </div>
+
+    <!-- 2. ÉCRAN D'INSCRIPTION -->
+    <div id="registerForm" style="display: none;">
+      <input type="text" id="regNom" placeholder="Votre Nom">
+      <input type="text" id="regPrenom" placeholder="Votre Prénom">
+      <input type="password" id="regPin" placeholder="Créer un Code PIN (4 chiffres)" maxlength="4">
+      <button class="btn-secondary" onclick="creerCompte()">S'INSCRIRE</button>
+      <span class="toggle-link" onclick="afficherFormulaire('loginForm')">Déjà un compte ? Se connecter</span>
+    </div>
+
+    <!-- 3. ÉCRAN DE POINTAGE -->
+    <div id="actionForm" style="display: none;">
+      <p id="welcomeMsg" style="font-weight: bold;"></p>
+      <button class="btn-start" onclick="enregistrerPointage('START', 'MANUEL')">▶ START (Prise de service)</button>
+      <button class="btn-stop" onclick="enregistrerPointage('STOP', 'MANUEL')">⏹ STOP (Fin / Pause)</button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIGURATION GITHUB
+    // ==========================================
+    const GITHUB_USER = "Blackbang145";
+    const GITHUB_REPO = "pharmacie-app";
+    const GITHUB_TOKEN = "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";
+    // ==========================================
+
+    const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
+    let employesData = [];
+    let employeActuel = null;
+
+    function afficherFormulaire(formId) {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('actionForm').style.display = 'none';
+      document.getElementById(formId).style.display = 'block';
+    }
+
+    function encodeUTF8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function decodeUTF8(base64Str) {
+      const binaryString = atob(base64Str);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
+    async function initialiser() {
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/data.json?cache=${Date.now()}`);
+        const data = await res.json();
+        employesData = data.employes || [];
+
+        const select = document.getElementById('selectEmploye');
+        select.innerHTML = '<option value="">-- Sélectionnez votre nom --</option>';
+        employesData.forEach(e => {
+          let opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = `${e.prenom} ${e.nom}`;
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        alert("Erreur de chargement. Vérifie la branche principale (main).");
+      }
+    }
+
+    async function creerCompte() {
+      const nom = document.getElementById('regNom').value.trim();
+      const prenom = document.getElementById('regPrenom').value.trim();
+      const pin = document.getElementById('regPin').value.trim();
+
+      if (!nom || !prenom || pin.length !== 4 || isNaN(pin)) {
+        return alert("Renseigne un nom, un prénom et un PIN à 4 chiffres.");
+      }
+
+      document.getElementById('mainCard').classList.add('loading');
+
+      try {
+        const fileRes = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        const fileData = await fileRes.json();
+        const jsonContent = JSON.parse(decodeUTF8(fileData.content));
+
+        const nouvelId = jsonContent.employes.length > 0 ? Math.max(...jsonContent.employes.map(e => e.id)) + 1 : 1;
+        
+        jsonContent.employes.push({
+          id: nouvelId,
+          nom: nom,
+          prenom: prenom,
+          pin: pin,
+          heures_contrat: 160
+        });
+
+        await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Inscription de ${prenom} ${nom}`,
+            content: encodeUTF8(JSON.stringify(jsonContent, null, 2)),
+            sha: fileData.sha
+          })
+        });
+
+        alert("Compte créé avec succès ! Connecte-toi à présent.");
+        await initialiser();
+        afficherFormulaire('loginForm');
+
+      } catch (err) {
+        alert("Erreur lors de la création du compte.");
+      } finally {
+        document.getElementById('mainCard').classList.remove('loading');
+      }
+    }
+
+    function validerIdentite() {
+      const id = parseInt(document.getElementById('selectEmploye').value);
+      const pin = document.getElementById('inputPin').value;
+
+      const user = employesData.find(e => e.id === id && e.pin === pin);
+
+      if (user) {
+        employeActuel = user;
+        afficherFormulaire('actionForm');
+        document.getElementById('welcomeMsg').textContent = `Bonjour ${user.prenom} ${user.nom}`;
+      } else {
+        alert("Code PIN ou nom incorrect !");
+      }
+    }
+
+    async function enregistrerPointage(action, mode) {
+      if (!employeActuel) return;
+      document.getElementById('mainCard').classList.add('loading');
+
+      try {
+        const fileRes = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        const fileData = await fileRes.json();
+        const jsonContent = JSON.parse(decodeUTF8(fileData.content));
+
+        if (!jsonContent.pointages) jsonContent.pointages = [];
+
+        jsonContent.pointages.push({
+          employe_id: employeActuel.id,
+          action: action,
+          mode: mode,
+          timestamp: new Date().toISOString()
+        });
+
+        await fetch(API_URL, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Pointage ${action} - ${employeActuel.prenom} ${employeActuel.nom}`,
+            content: encodeUTF8(JSON.stringify(jsonContent, null, 2)),
+            sha: fileData.sha
+          })
+        });
+
+        const badge = document.getElementById('statusBadge');
+        if (action === 'START') {
+          badge.textContent = "EN SERVICE";
+          badge.className = "status-badge online";
+          localStorage.setItem('session_active', employeActuel.id);
+          alert("Pointage START validé !");
+        } else {
+          badge.textContent = "HORS SERVICE";
+          badge.className = "status-badge offline";
+          localStorage.removeItem('session_active');
+          alert("Pointage STOP enregistré.");
+          location.reload();
+        }
+
+      } catch (err) {
+        alert("Erreur lors de l'enregistrement du pointage.");
+      } finally {
+        document.getElementById('mainCard').classList.remove('loading');
+      }
+    }
+
+    window.addEventListener('offline', () => {
+      const activeUser = localStorage.getItem('session_active');
+      if (activeUser && employeActuel) {
+        enregistrerPointage('STOP', 'AUTO_WIFI');
+      }
+    });
+
+    initialiser();
+  </script>
+</body>
+</html>
