@@ -118,6 +118,7 @@
     }
 
     function decodeUTF8(base64Str) {
+      if (!base64Str) return JSON.stringify({ employes: [], pointages: [] });
       const cleanBase64 = base64Str.replace(/\n/g, '');
       const binaryString = atob(cleanBase64);
       const bytes = new Uint8Array(binaryString.length);
@@ -139,7 +140,9 @@
         if (!res.ok) throw new Error("Accès impossible à data.json.");
         
         const fileData = await res.json();
-        const data = JSON.parse(decodeUTF8(fileData.content));
+        const contentStr = decodeUTF8(fileData.content);
+        const data = JSON.parse(contentStr || '{"employes":[],"pointages":[]}');
+        
         employesData = data.employes || [];
 
         const select = document.getElementById('selectEmploye');
@@ -157,7 +160,8 @@
           select.appendChild(opt);
         });
       } catch (e) {
-        alert("Erreur de chargement des données.");
+        console.error(e);
+        alert("Erreur de chargement. Vérifie que data.json existe bien sur GitHub.");
       }
     }
 
@@ -175,7 +179,11 @@
       try {
         const fileRes = await fetch(API_URL, { headers: getAuthHeaders() });
         const fileData = await fileRes.json();
-        const jsonContent = JSON.parse(decodeUTF8(fileData.content));
+        
+        let jsonContent = { employes: [], pointages: [] };
+        if (fileData.content) {
+          jsonContent = JSON.parse(decodeUTF8(fileData.content));
+        }
 
         if (!jsonContent.employes) jsonContent.employes = [];
 
@@ -233,7 +241,11 @@
       try {
         const fileRes = await fetch(API_URL, { headers: getAuthHeaders() });
         const fileData = await fileRes.json();
-        const jsonContent = JSON.parse(decodeUTF8(fileData.content));
+        
+        let jsonContent = { employes: [], pointages: [] };
+        if (fileData.content) {
+          jsonContent = JSON.parse(decodeUTF8(fileData.content));
+        }
 
         if (!jsonContent.pointages) jsonContent.pointages = [];
 
