@@ -21,6 +21,12 @@
       "action": "START",
       "mode": "MANUEL",
       "timestamp": "2026-08-08T02:20:17.001Z"
+    },
+    {
+      "employe_id": 2,
+      "action": "STOP",
+      "mode": "MANUEL",
+      "timestamp": "2026-08-08T02:20:22.448Z"
     }
   ]
 }
