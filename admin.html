@@ -84,32 +84,14 @@
   </div>
 
   <script>
-    const GITHUB_USER = "Blackbang145";
-    const GITHUB_REPO = "pharmacie-app";
-    const GITHUB_TOKEN = "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";
-
-    const API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data.json`;
-
-    function decodeUTF8(base64Str) {
-      if (!base64Str) return JSON.stringify({ employes: [], pointages: [] });
-      const cleanBase64 = base64Str.replace(/\n/g, '');
-      const binaryString = atob(cleanBase64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) { bytes[i] = binaryString.charCodeAt(i); }
-      return new TextDecoder().decode(bytes);
-    }
+    const API_ENDPOINT = "/.netlify/functions/pointage";
 
     async function chargerDonnees() {
       try {
-        const res = await fetch(API_URL, {
-          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-        });
-
-        if (!res.ok) throw new Error("Erreur de connexion.");
-        const fileData = await res.json();
-        const contentStr = decodeUTF8(fileData.content);
-        const data = JSON.parse(contentStr || '{"employes":[],"pointages":[]}');
-
+        const res = await fetch(API_ENDPOINT);
+        if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
+        
+        const data = await res.json();
         afficherPresences(data.employes || [], data.pointages || []);
         afficherHeures(data.employes || [], data.pointages || []);
       } catch (e) {
