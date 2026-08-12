@@ -53,11 +53,6 @@
     .btn-resume { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
     .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; grid-column: span 2; }
 
-    .btn-admin {
-      background: transparent; color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 20px; font-size: 13px;
-    }
-    .btn-admin:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.3); }
-
     .message { margin-top: 16px; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; display: none; }
     .msg-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
     .msg-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -88,8 +83,6 @@
       </div>
 
       <div id="msgBox" class="message"></div>
-
-      <button class="btn btn-admin" onclick="window.location.href='admin.html'">🔒 Espace Direction</button>
     </div>
   </div>
 
@@ -155,7 +148,7 @@
       });
     }
 
-    // Gestion visuelle du statut et de l'activation des boutons
+    // Gestion visuelle du statut
     function rafraichirEtatBoutons() {
       const empId = parseInt(document.getElementById('employeSelect').value);
       const badge = document.getElementById('badgeStatus');
