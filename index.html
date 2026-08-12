@@ -75,6 +75,12 @@
       <input type="password" id="inputPin" placeholder="Code PIN (4 chiffres)" maxlength="4" inputmode="numeric">
       <button class="btn-start" onclick="validerIdentite()">Se Connecter ➔</button>
       <span class="toggle-link" onclick="afficherFormulaire('registerForm')">+ Inscrire un nouvel employé</span>
+      
+      <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+        <a href="admin.html" style="color: #64748b; font-size: 12px; text-decoration: none; font-weight: 600;">
+          🔒 Espace Direction
+        </a>
+      </div>
     </div>
 
     <!-- 2. INSCRIPTION -->
@@ -89,13 +95,22 @@
     <!-- 3. ACTION POINTAGE -->
     <div id="actionForm" style="display: none;">
       <p id="welcomeMsg" style="font-weight: 700; font-size: 16px; color: #38bdf8; margin-bottom: 20px;"></p>
-      <button class="btn-start" onclick="enregistrerPointage('START', 'MANUEL')">▶ Prise de Service (START)</button>
-      <button class="btn-stop" onclick="enregistrerPointage('STOP', 'MANUEL')">⏹ Fin de Service / Pause (STOP)</button>
+      <button class="btn-start" onclick="verifierPositionEtPointer('START', 'MANUEL')">▶ Prise de Service (START)</button>
+      <button class="btn-stop" onclick="verifierPositionEtPointer('STOP', 'MANUEL')">⏹ Fin de Service / Pause (STOP)</button>
     </div>
   </div>
 
   <script>
     const API_ENDPOINT = "/.netlify/functions/pointage";
+    
+    // ==========================================
+    // 📍 CONFIGURATION GPS PHARMACIE
+    // (Ajuste ces 2 valeurs selon ton emplacement Google Maps)
+    // ==========================================
+    const PHARMACIE_LAT = 5.3296667;  // Latitude
+    const PHARMACIE_LNG = -4.0776944; // Longitude
+    const RAYON_MAX_METRES = 50;     // Marge de distance autorisée (en mètres)
+
     let employesData = [];
     let employeActuel = null;
 
@@ -195,9 +210,56 @@
       }
     }
 
+    // --- CONTRÔLE GÉOLOCALISATION GPS ---
+    function calculerDistanceMetres(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // Rayon de la Terre en mètres
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      return R * c;
+    }
+
+    function verifierPositionEtPointer(action, mode) {
+      if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas activée sur ce navigateur.");
+        return;
+      }
+
+      document.getElementById('mainCard').classList.add('loading');
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+
+          const distance = calculerDistanceMetres(userLat, userLng, PHARMACIE_LAT, PHARMACIE_LNG);
+
+          if (distance <= RAYON_MAX_METRES) {
+            // Dans le périmètre autorisé -> On enregistre
+            enregistrerPointage(action, mode);
+          } else {
+            // Hors périmètre -> Bloqué
+            document.getElementById('mainCard').classList.remove('loading');
+            alert(`❌ Pointage refusé !\n\nVous êtes à ${Math.round(distance)} mètres de la pharmacie.\nVous devez être sur place (max ${RAYON_MAX_METRES}m) pour valider votre pointage.`);
+          }
+        },
+        (error) => {
+          document.getElementById('mainCard').classList.remove('loading');
+          alert("⚠️ Position introuvable : Activer le GPS / la localisation sur votre téléphone pour pointer.");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
     async function enregistrerPointage(action, mode) {
       if (!employeActuel) return;
-      document.getElementById('mainCard').classList.add('loading');
 
       try {
         const res = await fetch(API_ENDPOINT);
