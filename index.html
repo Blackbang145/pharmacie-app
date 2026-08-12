@@ -53,6 +53,22 @@
     .btn-resume { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
     .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; grid-column: span 2; }
 
+    .btn-toggle-inscription {
+      background: transparent; color: #38bdf8; border: 1px dashed rgba(56, 189, 248, 0.4);
+      margin-top: 20px; font-size: 13px; width: 100%; padding: 10px; border-radius: 12px; font-weight: 600; cursor: pointer;
+    }
+    .btn-toggle-inscription:hover { background: rgba(56, 189, 248, 0.1); }
+
+    .btn-register {
+      background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; margin-top: 8px;
+    }
+
+    .inscription-box {
+      background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px; padding: 20px; margin-top: 16px; text-align: left; display: none;
+    }
+    .inscription-box h3 { margin: 0 0 12px 0; font-size: 15px; color: #38bdf8; text-align: center; }
+
     .message { margin-top: 16px; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; display: none; }
     .msg-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
     .msg-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
@@ -83,6 +99,19 @@
       </div>
 
       <div id="msgBox" class="message"></div>
+
+      <!-- BOUTON D'INSCRIPTION -->
+      <button class="btn-toggle-inscription" onclick="basculerFormulaireInscription()">➕ Nouvel employé ? S'inscrire ici</button>
+
+      <!-- FORMULAIRE D'INSCRIPTION -->
+      <div id="inscriptionBox" class="inscription-box">
+        <h3>📝 Inscription Nouveau Personnel</h3>
+        <input type="text" id="newNom" placeholder="Nom de famille">
+        <input type="text" id="newPrenom" placeholder="Prénom">
+        <input type="password" id="newPin" placeholder="Créer un code PIN (4 chiffres)" maxlength="4" inputmode="numeric">
+        <button class="btn btn-register" onclick="inscrireEmploye()">Valider mon inscription ➔</button>
+      </div>
+
     </div>
   </div>
 
@@ -148,6 +177,55 @@
       });
     }
 
+    function basculerFormulaireInscription() {
+      const box = document.getElementById('inscriptionBox');
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Inscription d'un nouvel employé
+    async function inscrireEmploye() {
+      const nom = document.getElementById('newNom').value.trim();
+      const prenom = document.getElementById('newPrenom').value.trim();
+      const pin = document.getElementById('newPin').value.trim();
+
+      if (!nom || !prenom) return afficherMessage("Veuillez remplir le nom et le prénom.", true);
+      if (pin.length !== 4 || isNaN(pin)) return afficherMessage("Le code PIN doit comporter exactement 4 chiffres.", true);
+
+      afficherMessage("Inscription en cours...", false);
+
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'REGISTER',
+            nom: nom,
+            prenom: prenom,
+            pin: pin
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erreur lors de l'inscription.");
+
+        afficherMessage(`Bienvenue ${prenom} ! Inscription réussie. Vous pouvez maintenant pointer.`, false);
+        
+        // Nettoyer les champs d'inscription
+        document.getElementById('newNom').value = '';
+        document.getElementById('newPrenom').value = '';
+        document.getElementById('newPin').value = '';
+        document.getElementById('inscriptionBox').style.display = 'none';
+
+        // Recharger les données pour ajouter l'employé à la liste déroulante
+        const refreshRes = await fetch(API_ENDPOINT);
+        globalData = await refreshRes.json();
+        remplirSelectEmployes();
+
+      } catch (err) {
+        afficherMessage(`Erreur : ${err.message}`, true);
+      }
+    }
+
     // Gestion visuelle du statut
     function rafraichirEtatBoutons() {
       const empId = parseInt(document.getElementById('employeSelect').value);
@@ -159,7 +237,6 @@
         return;
       }
 
-      // Dernier mouvement de cet employé
       const pointagesEmp = (globalData.pointages || [])
         .filter(p => p.employe_id === empId)
         .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -179,7 +256,7 @@
       }
     }
 
-    // Enregistrement d'une action
+    // Enregistrement d'un pointage
     async function enregistrerPointage(action) {
       const empId = parseInt(document.getElementById('employeSelect').value);
       const pin = document.getElementById('pinInput').value.trim();
@@ -189,7 +266,6 @@
 
       afficherMessage("Vérification de la position GPS...", false);
 
-      // 1. Vérification GPS
       if (!navigator.geolocation) {
         return afficherMessage("La géolocalisation n'est pas supportée par votre navigateur.", true);
       }
@@ -205,7 +281,6 @@
             return afficherMessage(`Pointage refusé : vous êtes à ${Math.round(dist)}m de la pharmacie (max autorisé : ${RAYON_MAX_METRES}m).`, true);
           }
 
-          // 2. Envoi au serveur
           try {
             afficherMessage("Enregistrement en cours...", false);
             const res = await fetch(API_ENDPOINT, {
@@ -226,7 +301,6 @@
             afficherMessage(`Succès ! Action (${action}) enregistrée avec succès.`, false);
             document.getElementById('pinInput').value = '';
             
-            // Recharger les données pour rafraîchir le statut
             const refreshRes = await fetch(API_ENDPOINT);
             globalData = await refreshRes.json();
             rafraichirEtatBoutons();
