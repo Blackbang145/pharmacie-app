@@ -100,10 +100,10 @@
 
       <div id="msgBox" class="message"></div>
 
-      <!-- BOUTON D'INSCRIPTION -->
+      <!-- BOUTON INSCRIPTION -->
       <button class="btn-toggle-inscription" onclick="basculerFormulaireInscription()">➕ Nouvel employé ? S'inscrire ici</button>
 
-      <!-- FORMULAIRE D'INSCRIPTION -->
+      <!-- FORMULAIRE INSCRIPTION -->
       <div id="inscriptionBox" class="inscription-box">
         <h3>📝 Inscription Nouveau Personnel</h3>
         <input type="text" id="newNom" placeholder="Nom de famille">
@@ -116,17 +116,13 @@
   </div>
 
   <script>
-    // ==========================================
-    // 📍 CONFIGURATION GPS PHARMACIE
-    // ==========================================
-    const PHARMACIE_LAT = 5.3296667;  // Latitude
-    const PHARMACIE_LNG = -4.0776944; // Longitude
-    const RAYON_MAX_METRES = 50;     // Distance autorisée en mètres
+    const PHARMACIE_LAT = 5.3296667;
+    const PHARMACIE_LNG = -4.0776944;
+    const RAYON_MAX_METRES = 50;
 
     const API_ENDPOINT = "/.netlify/functions/pointage";
     let globalData = { employes: [], pointages: [] };
 
-    // Horloge en direct
     function demarrerHorloge() {
       const maj = () => {
         const maintenant = new Date();
@@ -139,7 +135,6 @@
       setInterval(maj, 1000);
     }
 
-    // Calcul de la distance GPS (Formule de Haversine)
     function calculerDistanceMetres(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -151,14 +146,18 @@
       return R * c;
     }
 
-    // Chargement initial des données
     async function initialiser() {
       demarrerHorloge();
+      await chargerDonnees();
+    }
+
+    async function chargerDonnees() {
       try {
         const res = await fetch(API_ENDPOINT);
-        if (!res.ok) throw new Error("Impossible de se connecter au serveur.");
-        
+        if (!res.ok) throw new Error("Impossible de charger les données.");
         globalData = await res.json();
+        if (!globalData.employes) globalData.employes = [];
+        if (!globalData.pointages) globalData.pointages = [];
         remplirSelectEmployes();
       } catch (err) {
         afficherMessage(`Erreur : ${err.message}`, true);
@@ -169,7 +168,7 @@
       const select = document.getElementById('employeSelect');
       select.innerHTML = '<option value="">-- Sélectionnez votre nom --</option>';
       
-      (globalData.employes || []).forEach(e => {
+      globalData.employes.forEach(e => {
         const opt = document.createElement('option');
         opt.value = e.id;
         opt.textContent = `${e.prenom} ${e.nom}`;
@@ -182,43 +181,54 @@
       box.style.display = box.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Inscription d'un nouvel employé
+    // INSCRIPTION (SANS MODIFIER pointage.js)
     async function inscrireEmploye() {
       const nom = document.getElementById('newNom').value.trim();
       const prenom = document.getElementById('newPrenom').value.trim();
       const pin = document.getElementById('newPin').value.trim();
 
       if (!nom || !prenom) return afficherMessage("Veuillez remplir le nom et le prénom.", true);
-      if (pin.length !== 4 || isNaN(pin)) return afficherMessage("Le code PIN doit comporter exactement 4 chiffres.", true);
+      if (pin.length !== 4 || isNaN(pin)) return afficherMessage("Le code PIN doit comporter 4 chiffres.", true);
+
+      // Vérifier si le PIN est déjà pris
+      const pinExiste = globalData.employes.some(e => e.pin === pin);
+      if (pinExiste) return afficherMessage("Ce code PIN est déjà pris. Choisissez-en un autre.", true);
 
       afficherMessage("Inscription en cours...", false);
 
+      // Calcul du nouvel ID
+      const newId = globalData.employes.length > 0 
+        ? Math.max(...globalData.employes.map(e => e.id)) + 1 
+        : 1;
+
+      // Ajout de l'employé dans les données locales
+      globalData.employes.push({
+        id: newId,
+        nom: nom,
+        prenom: prenom,
+        pin: pin,
+        heures_contrat: 160
+      });
+
+      // Envoi du fichier mis à jour à la fonction Netlify existante
       try {
         const res = await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            type: 'REGISTER',
-            nom: nom,
-            prenom: prenom,
-            pin: pin
+            message: `Inscription de ${prenom} ${nom}`,
+            data: globalData
           })
         });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Erreur lors de l'inscription.");
+        if (!res.ok) throw new Error("Erreur lors de l'enregistrement de l'inscription.");
 
-        afficherMessage(`Bienvenue ${prenom} ! Inscription réussie. Vous pouvez maintenant pointer.`, false);
-        
-        // Nettoyer les champs d'inscription
+        afficherMessage(`Bienvenue ${prenom} ! Inscription réussie.`, false);
         document.getElementById('newNom').value = '';
         document.getElementById('newPrenom').value = '';
         document.getElementById('newPin').value = '';
         document.getElementById('inscriptionBox').style.display = 'none';
 
-        // Recharger les données pour ajouter l'employé à la liste déroulante
-        const refreshRes = await fetch(API_ENDPOINT);
-        globalData = await refreshRes.json();
         remplirSelectEmployes();
 
       } catch (err) {
@@ -226,7 +236,6 @@
       }
     }
 
-    // Gestion visuelle du statut
     function rafraichirEtatBoutons() {
       const empId = parseInt(document.getElementById('employeSelect').value);
       const badge = document.getElementById('badgeStatus');
@@ -237,7 +246,7 @@
         return;
       }
 
-      const pointagesEmp = (globalData.pointages || [])
+      const pointagesEmp = globalData.pointages
         .filter(p => p.employe_id === empId)
         .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
@@ -256,18 +265,23 @@
       }
     }
 
-    // Enregistrement d'un pointage
+    // ENREGISTREMENT DE POINTAGE (SANS MODIFIER pointage.js)
     async function enregistrerPointage(action) {
       const empId = parseInt(document.getElementById('employeSelect').value);
       const pin = document.getElementById('pinInput').value.trim();
 
       if (!empId) return afficherMessage("Veuillez sélectionner votre nom.", true);
-      if (!pin) return afficherMessage("Veuillez saisir votre code PIN.", true);
+      
+      // Vérification du PIN côté client
+      const emp = globalData.employes.find(e => e.id === empId);
+      if (!emp || emp.pin !== pin) {
+        return afficherMessage("Code PIN incorrect.", true);
+      }
 
-      afficherMessage("Vérification de la position GPS...", false);
+      afficherMessage("Vérification GPS...", false);
 
       if (!navigator.geolocation) {
-        return afficherMessage("La géolocalisation n'est pas supportée par votre navigateur.", true);
+        return afficherMessage("La géolocalisation n'est pas disponible.", true);
       }
 
       navigator.geolocation.getCurrentPosition(
@@ -278,8 +292,19 @@
           );
 
           if (dist > RAYON_MAX_METRES) {
-            return afficherMessage(`Pointage refusé : vous êtes à ${Math.round(dist)}m de la pharmacie (max autorisé : ${RAYON_MAX_METRES}m).`, true);
+            return afficherMessage(`Refusé : vous êtes à ${Math.round(dist)}m (max : ${RAYON_MAX_METRES}m).`, true);
           }
+
+          // Ajout du pointage dans les données locales
+          globalData.pointages.push({
+            id: Date.now(),
+            employe_id: empId,
+            action: action,
+            timestamp: new Date().toISOString(),
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            mode: 'MANUEL'
+          });
 
           try {
             afficherMessage("Enregistrement en cours...", false);
@@ -287,31 +312,22 @@
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                employe_id: empId,
-                pin: pin,
-                action: action,
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude
+                message: `Pointage ${action} par ${emp.prenom} ${emp.nom}`,
+                data: globalData
               })
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Erreur lors de l'enregistrement.");
+            if (!res.ok) throw new Error("Erreur lors de l'enregistrement du pointage.");
 
-            afficherMessage(`Succès ! Action (${action}) enregistrée avec succès.`, false);
+            afficherMessage(`Succès ! Action (${action}) enregistrée.`, false);
             document.getElementById('pinInput').value = '';
-            
-            const refreshRes = await fetch(API_ENDPOINT);
-            globalData = await refreshRes.json();
             rafraichirEtatBoutons();
 
           } catch (err) {
             afficherMessage(`Erreur : ${err.message}`, true);
           }
         },
-        (err) => {
-          afficherMessage("Veuillez autoriser l'accès à la position GPS pour pouvoir pointer.", true);
-        },
+        () => afficherMessage("Veuillez autoriser le GPS pour pointer.", true),
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
