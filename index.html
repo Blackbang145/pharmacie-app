@@ -18,7 +18,7 @@
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; 
       padding: 32px 24px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); 
-      width: 100%; max-width: 400px; text-align: center; position: relative; overflow: hidden;
+      width: 100%; max-width: 420px; text-align: center; position: relative; overflow: hidden;
     }
     .card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -29,13 +29,15 @@
     
     .status-badge { 
       display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 30px; 
-      font-weight: 700; font-size: 13px; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px;
+      font-weight: 700; font-size: 13px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;
     }
     .online { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
     .offline { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+    .in-pause { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .online .dot { background: #34d399; box-shadow: 0 0 10px #34d399; }
     .offline .dot { background: #f87171; }
+    .in-pause .dot { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
 
     select, input { 
       width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.12); 
@@ -44,20 +46,38 @@
     select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
     select option { background: #1e293b; color: white; }
 
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     button { 
-      width: 100%; padding: 14px 16px; margin: 12px 0 6px 0; border-radius: 12px; border: none; 
-      font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px 12px; margin: 6px 0; border-radius: 12px; border: none; 
+      font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
     }
     button:active { transform: scale(0.98); }
     .btn-start { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.4); }
-    .btn-start:hover { box-shadow: 0 12px 25px -6px rgba(16, 185, 129, 0.6); transform: translateY(-1px); }
+    .btn-pause { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: 0 8px 20px -6px rgba(245, 158, 11, 0.4); }
+    .btn-resume { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; box-shadow: 0 8px 20px -6px rgba(6, 182, 212, 0.4); }
     .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 8px 20px -6px rgba(239, 68, 68, 0.4); }
-    .btn-stop:hover { box-shadow: 0 12px 25px -6px rgba(239, 68, 68, 0.6); transform: translateY(-1px); }
     .btn-secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4); }
 
     .toggle-link { color: #94a3b8; font-size: 13px; cursor: pointer; margin-top: 16px; display: inline-block; font-weight: 600; }
     .toggle-link:hover { color: #38bdf8; text-decoration: underline; }
     .loading { opacity: 0.5; pointer-events: none; }
+
+    /* Zone d'historique */
+    .history-box {
+      margin-top: 20px; padding: 14px; background: rgba(15, 23, 42, 0.5); 
+      border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.05); text-align: left;
+    }
+    .history-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; }
+    .history-item { 
+      font-size: 12px; display: flex; justify-content: space-between; align-items: center; 
+      padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); 
+    }
+    .history-item:last-child { border-bottom: none; }
+    .tag { font-weight: 700; padding: 2px 6px; border-radius: 6px; font-size: 10px; }
+    .tag-START { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .tag-PAUSE { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .tag-RESUME { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
+    .tag-STOP { background: rgba(239, 68, 68, 0.2); color: #f87171; }
   </style>
 </head>
 <body>
@@ -92,11 +112,28 @@
       <span class="toggle-link" onclick="afficherFormulaire('loginForm')">← Retour à la connexion</span>
     </div>
 
-    <!-- 3. ACTION POINTAGE -->
+    <!-- 3. ACTIONS ET HISTORIQUE -->
     <div id="actionForm" style="display: none;">
-      <p id="welcomeMsg" style="font-weight: 700; font-size: 16px; color: #38bdf8; margin-bottom: 20px;"></p>
+      <p id="welcomeMsg" style="font-weight: 700; font-size: 16px; color: #38bdf8; margin-bottom: 16px;"></p>
+      
       <button class="btn-start" onclick="verifierPositionEtPointer('START', 'MANUEL')">▶ Prise de Service (START)</button>
-      <button class="btn-stop" onclick="verifierPositionEtPointer('STOP', 'MANUEL')">⏹ Fin de Service / Pause (STOP)</button>
+      
+      <div class="btn-grid">
+        <button class="btn-pause" onclick="verifierPositionEtPointer('PAUSE', 'MANUEL')">⏸️ Pause</button>
+        <button class="btn-resume" onclick="verifierPositionEtPointer('RESUME', 'MANUEL')">▶️ Reprise</button>
+      </div>
+
+      <button class="btn-stop" onclick="verifierPositionEtPointer('STOP', 'MANUEL')">⏹ Fin de Service (STOP)</button>
+
+      <!-- HISTORIQUE DU JOUR -->
+      <div class="history-box">
+        <div class="history-title">⏱️ Mes derniers pointages</div>
+        <div id="historyList">
+          <div style="font-size: 12px; color: #64748b; text-align: center;">Aucun pointage récent</div>
+        </div>
+      </div>
+
+      <span class="toggle-link" onclick="location.reload()">← Déconnexion</span>
     </div>
   </div>
 
@@ -104,14 +141,14 @@
     const API_ENDPOINT = "/.netlify/functions/pointage";
     
     // ==========================================
-    // 📍 CONFIGURATION GPS PHARMACIE
-    // (Ajuste ces 2 valeurs selon ton emplacement Google Maps)
+    // 📍 CONFIGURATION GPS PHARMACIE (Google Maps)
     // ==========================================
     const PHARMACIE_LAT = 5.3296667;  // Latitude
     const PHARMACIE_LNG = -4.0776944; // Longitude
-    const RAYON_MAX_METRES = 50;     // Marge de distance autorisée (en mètres)
+    const RAYON_MAX_METRES = 50;     // Distance autorisée (50 mètres)
 
     let employesData = [];
+    let pointagesData = [];
     let employeActuel = null;
 
     function afficherFormulaire(formId) {
@@ -128,6 +165,7 @@
         
         const data = await res.json();
         employesData = data.employes || [];
+        pointagesData = data.pointages || [];
 
         const select = document.getElementById('selectEmploye');
         select.innerHTML = '<option value="">-- Sélectionnez votre nom --</option>';
@@ -205,14 +243,65 @@
         employeActuel = user;
         afficherFormulaire('actionForm');
         document.getElementById('welcomeMsg').textContent = `Bonjour ${user.prenom} 👋`;
+        rafraichirHistorique();
       } else {
         alert("Code PIN incorrect !");
       }
     }
 
-    // --- CONTRÔLE GÉOLOCALISATION GPS ---
+    function formaterDateHeure(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString('fr-FR', {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    }
+
+    function rafraichirHistorique() {
+      if (!employeActuel) return;
+
+      const mesPointages = pointagesData
+        .filter(p => p.employe_id === employeActuel.id)
+        .reverse();
+
+      const listDiv = document.getElementById('historyList');
+      const badge = document.getElementById('statusBadge');
+
+      if (mesPointages.length === 0) {
+        listDiv.innerHTML = `<div style="font-size: 12px; color: #64748b; text-align: center;">Aucun pointage enregistré</div>`;
+        badge.innerHTML = `<span class="dot"></span> Hors Service`;
+        badge.className = "status-badge offline";
+        return;
+      }
+
+      const dernier = mesPointages[0];
+      if (dernier.action === 'START' || dernier.action === 'RESUME') {
+        badge.innerHTML = `<span class="dot"></span> En Service`;
+        badge.className = "status-badge online";
+      } else if (dernier.action === 'PAUSE') {
+        badge.innerHTML = `<span class="dot"></span> En Pause`;
+        badge.className = "status-badge in-pause";
+      } else {
+        badge.innerHTML = `<span class="dot"></span> Hors Service`;
+        badge.className = "status-badge offline";
+      }
+
+      let html = '';
+      const libelles = { 'START': 'Prise de service', 'PAUSE': 'Pause', 'RESUME': 'Reprise', 'STOP': 'Fin de service' };
+
+      mesPointages.slice(0, 5).forEach(p => {
+        html += `
+          <div class="history-item">
+            <span class="tag tag-${p.action}">${libelles[p.action] || p.action}</span>
+            <span style="color: #cbd5e1;">${formaterDateHeure(p.timestamp)}</span>
+          </div>
+        `;
+      });
+
+      listDiv.innerHTML = html;
+    }
+
     function calculerDistanceMetres(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // Rayon de la Terre en mètres
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -242,17 +331,15 @@
           const distance = calculerDistanceMetres(userLat, userLng, PHARMACIE_LAT, PHARMACIE_LNG);
 
           if (distance <= RAYON_MAX_METRES) {
-            // Dans le périmètre autorisé -> On enregistre
             enregistrerPointage(action, mode);
           } else {
-            // Hors périmètre -> Bloqué
             document.getElementById('mainCard').classList.remove('loading');
             alert(`❌ Pointage refusé !\n\nVous êtes à ${Math.round(distance)} mètres de la pharmacie.\nVous devez être sur place (max ${RAYON_MAX_METRES}m) pour valider votre pointage.`);
           }
         },
         (error) => {
           document.getElementById('mainCard').classList.remove('loading');
-          alert("⚠️ Position introuvable : Activer le GPS / la localisation sur votre téléphone pour pointer.");
+          alert("⚠️ Position introuvable : Veuillez activer le GPS sur votre appareil.");
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -266,9 +353,16 @@
         const data = await res.json();
 
         if (!data.pointages) data.pointages = [];
-        data.pointages.push({
-          employe_id: employeActuel.id, action: action, mode: mode, timestamp: new Date().toISOString()
-        });
+        
+        const nouveauPointage = {
+          employe_id: employeActuel.id, 
+          action: action, 
+          mode: mode, 
+          timestamp: new Date().toISOString()
+        };
+
+        data.pointages.push(nouveauPointage);
+        pointagesData = data.pointages;
 
         await fetch(API_ENDPOINT, {
           method: 'POST',
@@ -279,17 +373,9 @@
           })
         });
 
-        const badge = document.getElementById('statusBadge');
-        if (action === 'START') {
-          badge.innerHTML = `<span class="dot"></span> En Service`;
-          badge.className = "status-badge online";
-          alert("Bonne journée de travail ! Pointage START validé.");
-        } else {
-          badge.innerHTML = `<span class="dot"></span> Hors Service`;
-          badge.className = "status-badge offline";
-          alert("Pointage STOP enregistré. À bientôt !");
-          location.reload();
-        }
+        rafraichirHistorique();
+        const heureAffichee = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        alert(`✓ Pointage [${action}] enregistré à ${heureAffichee}`);
 
       } catch (err) {
         alert(`Erreur : ${err.message}`);
