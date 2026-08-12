@@ -3,160 +3,222 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Direction - Pharmacie</title>
+  <title>Espace Direction - Pharmacie</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s ease; }
     body { 
-      background: #0b0f19; color: #f8fafc; margin: 0; padding: 32px 16px; min-height: 100vh;
-      background-image: radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%);
+      background: #0f172a; 
+      background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+      min-height: 100vh; margin: 0; padding: 24px 16px; color: #f8fafc; 
     }
-    .container { max-width: 950px; margin: auto; }
+    .container { max-width: 900px; margin: 0 auto; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-    h1 { font-size: 26px; font-weight: 800; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 12px; }
-    
-    .btn-refresh { 
-      background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); 
-      padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    /* Carte d'authentification admin */
+    .login-card {
+      background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px;
+      padding: 32px 24px; max-width: 400px; margin: 60px auto; text-align: center;
     }
-    .btn-refresh:hover { background: rgba(56, 189, 248, 0.2); transform: translateY(-1px); }
-
-    .card { 
-      background: rgba(17, 24, 39, 0.8); border-radius: 20px; padding: 24px; margin-bottom: 24px; 
-      border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    input { 
+      width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.12); 
+      padding: 14px 16px; margin: 12px 0; border-radius: 12px; color: #ffffff; font-size: 15px; outline: none; text-align: center;
     }
-    .card h2 { font-size: 18px; font-weight: 700; color: #94a3b8; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+    button { 
+      width: 100%; padding: 14px 16px; border-radius: 12px; border: none; 
+      font-weight: 700; font-size: 15px; cursor: pointer; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white;
+    }
 
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { padding: 12px 16px; color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-    td { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-size: 14px; color: #e2e8f0; }
-    tr:last-child td { border-bottom: none; }
+    /* Dashboard Admin */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    h1 { font-weight: 800; font-size: 24px; margin: 0; color: #fff; }
 
-    .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; }
-    .badge-present { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
-    .badge-absent { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
-    .badge-auto { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .card {
+      background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
+      padding: 24px; margin-bottom: 24px;
+    }
+    .card-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: #38bdf8; }
 
-    .hours-count { font-size: 16px; font-weight: 800; color: #38bdf8; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th { padding: 12px 10px; color: #94a3b8; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; font-size: 11px; }
+    td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
+
+    .tag { font-weight: 700; padding: 4px 8px; border-radius: 6px; font-size: 11px; display: inline-block; }
+    .tag-START { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .tag-PAUSE { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .tag-RESUME { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
+    .tag-STOP { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    .link-back { color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .link-back:hover { color: #38bdf8; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="header">
-      <h1>📊 Dashboard Direction</h1>
-      <button class="btn-refresh" onclick="chargerDonnees()">🔄 Actualiser</button>
+
+    <!-- 1. AUTHENTIFICATION ADMIN -->
+    <div id="loginAdmin" class="login-card">
+      <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
+      <h2 style="margin: 0 0 16px 0;">Espace Direction</h2>
+      <input type="password" id="adminPin" placeholder="Code PIN Admin (ex: 0000)" maxlength="6" inputmode="numeric">
+      <button onclick="connexionAdmin()">Accéder au Dashboard ➔</button>
+      <div style="margin-top: 20px;">
+        <a href="index.html" class="link-back">← Retour au pointage</a>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Présences en Direct</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Employé</th>
-            <th>Statut</th>
-            <th>Dernier Mouvement</th>
-            <th>Mode Clôture</th>
-          </tr>
-        </thead>
-        <tbody id="tablePresences">
-          <tr><td colspan="4">Chargement des données...</td></tr>
-        </tbody>
-      </table>
+    <!-- 2. DASHBOARD ADMINISTRATION -->
+    <div id="dashboardAdmin" style="display: none;">
+      <div class="header">
+        <div>
+          <h1>📊 Dashboard Direction</h1>
+          <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Suivi des pointages et présences du personnel</p>
+        </div>
+        <a href="index.html" class="link-back">← Déconnexion</a>
+      </div>
+
+      <!-- TABLEAU DES POINTEUSES RÉCENTES -->
+      <div class="card">
+        <div class="card-title">⏱️ Historique détaillé des pointages</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Employé</th>
+                <th>Action</th>
+                <th>Mode</th>
+              </tr>
+            </thead>
+            <tbody id="tablePointages">
+              <tr><td colspan="5" style="text-align: center; color: #64748b;">Chargement des pointages...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LISTE DU PERSONNEL ET PIN -->
+      <div class="card">
+        <div class="card-title">👥 Personnel Enregistré</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nom & Prénom</th>
+                <th>Code PIN</th>
+                <th>Contrat</th>
+              </tr>
+            </thead>
+            <tbody id="tableEmployes">
+              <tr><td colspan="4" style="text-align: center; color: #64748b;">Chargement du personnel...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
-    <div class="card">
-      <h2>Cumul des Heures Effectuées</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Employé</th>
-            <th>Total Heures</th>
-            <th>Objectif Mensuel</th>
-          </tr>
-        </thead>
-        <tbody id="tableCumul">
-          <tr><td colspan="3">Chargement des données...</td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <script>
     const API_ENDPOINT = "/.netlify/functions/pointage";
+    // Code PIN pour déverrouiller l'espace direction (Tu peux le changer ici)
+    const ADMIN_PIN = "0000";
+
+    let globalData = { employes: [], pointages: [] };
+
+    function connexionAdmin() {
+      const pin = document.getElementById('adminPin').value.trim();
+      if (pin === ADMIN_PIN) {
+        document.getElementById('loginAdmin').style.display = 'none';
+        document.getElementById('dashboardAdmin').style.display = 'block';
+        chargerDonnees();
+      } else {
+        alert("Code PIN Admin incorrect !");
+      }
+    }
 
     async function chargerDonnees() {
       try {
         const res = await fetch(API_ENDPOINT);
-        if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
+        if (!res.ok) throw new Error("Erreur de connexion.");
         
-        const data = await res.json();
-        afficherPresences(data.employes || [], data.pointages || []);
-        afficherHeures(data.employes || [], data.pointages || []);
-      } catch (e) {
-        console.error(e);
-        alert("Erreur lors de la récupération des données.");
+        globalData = await res.json();
+        afficherPointages();
+        afficherEmployes();
+      } catch (err) {
+        alert(`Erreur : ${err.message}`);
       }
     }
 
-    function afficherPresences(employes, pointages) {
-      const tbody = document.getElementById('tablePresences');
-      tbody.innerHTML = '';
+    function formaterDate(isoString) {
+      const d = new Date(isoString);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
 
-      if (employes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="color: #64748b;">Aucun employé enregistré.</td></tr>';
+    function formaterHeure(isoString) {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function afficherPointages() {
+      const tbody = document.getElementById('tablePointages');
+      const pointages = (globalData.pointages || []).slice().reverse(); // Du plus récent au plus ancien
+
+      if (pointages.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b;">Aucun pointage trouvé</td></tr>`;
         return;
       }
 
-      employes.forEach(emp => {
-        const pEmp = pointages.filter(p => p.employe_id === emp.id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-        const dernier = pEmp[0];
-        const estPresent = dernier && dernier.action === 'START';
+      const libelles = { 'START': 'Prise de service', 'PAUSE': 'Pause', 'RESUME': 'Reprise', 'STOP': 'Fin de service' };
 
-        let row = `<tr>
-          <td><b style="color: #ffffff;">${emp.prenom} ${emp.nom}</b></td>
-          <td><span class="badge ${estPresent ? 'badge-present' : 'badge-absent'}">${estPresent ? '● PRÉSENT' : '○ ABSENT'}</span></td>
-          <td>${dernier ? new Date(dernier.timestamp).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'Aucun mouvement'}</td>
-          <td>${dernier && dernier.mode === 'AUTO_WIFI' ? '<span class="badge badge-auto">STOP AUTO (Wi-Fi)</span>' : (dernier ? dernier.mode : '-')}</td>
-        </tr>`;
-        tbody.innerHTML += row;
+      let html = '';
+      pointages.forEach(p => {
+        const emp = (globalData.employes || []).find(e => e.id === p.employe_id);
+        const nomComplet = emp ? `${emp.prenom} ${emp.nom}` : `Employé #${p.employe_id}`;
+
+        html += `
+          <tr>
+            <td>${formaterDate(p.timestamp)}</td>
+            <td style="font-weight: 700; color: #ffffff;">${formaterHeure(p.timestamp)}</td>
+            <td><strong>${nomComplet}</strong></td>
+            <td><span class="tag tag-${p.action}">${libelles[p.action] || p.action}</span></td>
+            <td style="color: #94a3b8; font-size: 11px;">${p.mode || 'MANUEL'}</td>
+          </tr>
+        `;
       });
+
+      tbody.innerHTML = html;
     }
 
-    function afficherHeures(employes, pointages) {
-      const tbody = document.getElementById('tableCumul');
-      tbody.innerHTML = '';
+    function afficherEmployes() {
+      const tbody = document.getElementById('tableEmployes');
+      const employes = globalData.employes || [];
 
       if (employes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="color: #64748b;">Aucun employé enregistré.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b;">Aucun employé enregistré</td></tr>`;
         return;
       }
 
-      employes.forEach(emp => {
-        const pEmp = pointages.filter(p => p.employe_id === emp.id).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-        let totalMs = 0; let startTemp = null;
-
-        pEmp.forEach(p => {
-          if (p.action === 'START') { startTemp = new Date(p.timestamp); } 
-          else if (p.action === 'STOP' && startTemp) {
-            totalMs += (new Date(p.timestamp) - startTemp);
-            startTemp = null;
-          }
-        });
-
-        const totalHeures = (totalMs / (1000 * 60 * 60)).toFixed(1);
-
-        let row = `<tr>
-          <td>${emp.prenom} ${emp.nom}</td>
-          <td><span class="hours-count">${totalHeures} h</span></td>
-          <td style="color: #94a3b8;">${emp.heures_contrat || 160} h / mois</td>
-        </tr>`;
-        tbody.innerHTML += row;
+      let html = '';
+      employes.forEach(e => {
+        html += `
+          <tr>
+            <td>#${e.id}</td>
+            <td style="font-weight: 700; color: #ffffff;">${e.prenom} ${e.nom}</td>
+            <td style="font-family: monospace; color: #38bdf8;">${e.pin}</td>
+            <td>${e.heures_contrat || 160}h / mois</td>
+          </tr>
+        `;
       });
-    }
 
-    chargerDonnees();
+      tbody.innerHTML = html;
+    }
   </script>
 </body>
 </html>
