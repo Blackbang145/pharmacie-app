@@ -8,5 +8,12 @@
       "heures_contrat": 160
     }
   ],
-  "pointages": []
+  "pointages": [
+    {
+      "employe_id": 1,
+      "action": "START",
+      "mode": "MANUEL",
+      "timestamp": "2026-08-12T22:45:59.146Z"
+    }
+  ]
 }
