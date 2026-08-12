@@ -6,385 +6,257 @@
   <title>Pointage Pharmacie</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.25s ease; }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s ease; }
     body { 
       background: #0f172a; 
-      background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
-                        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.12) 0px, transparent 50%);
-      min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; padding: 20px; color: #f8fafc; 
+      background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+      min-height: 100vh; margin: 0; padding: 24px 16px; color: #f8fafc;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
-    .card { 
-      background: rgba(30, 41, 59, 0.7); 
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; 
-      padding: 32px 24px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); 
-      width: 100%; max-width: 420px; text-align: center; position: relative; overflow: hidden;
-    }
-    .card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, #10b981, #6366f1);
-    }
-    .logo-icon { font-size: 32px; margin-bottom: 8px; display: inline-block; filter: drop-shadow(0 4px 10px rgba(16,185,129,0.3)); }
-    h2 { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; margin: 0 0 16px 0; color: #ffffff; }
+    .container { width: 100%; max-width: 440px; }
     
-    .status-badge { 
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 30px; 
-      font-weight: 700; font-size: 13px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+    .card {
+      background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px;
+      padding: 32px 24px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
-    .online { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
-    .offline { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
-    .in-pause { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .online .dot { background: #34d399; box-shadow: 0 0 10px #34d399; }
-    .offline .dot { background: #f87171; }
-    .in-pause .dot { background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
 
-    select, input { 
-      width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.12); 
-      padding: 14px 16px; margin: 8px 0; border-radius: 12px; color: #ffffff; font-size: 15px; outline: none;
+    .badge-status {
+      display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 16px;
     }
-    select:focus, input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
-    select option { background: #1e293b; color: white; }
+    .status-hors-service { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-en-service { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-en-pause { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    button { 
-      width: 100%; padding: 14px 12px; margin: 6px 0; border-radius: 12px; border: none; 
-      font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    button:active { transform: scale(0.98); }
-    .btn-start { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.4); }
-    .btn-pause { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: 0 8px 20px -6px rgba(245, 158, 11, 0.4); }
-    .btn-resume { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; box-shadow: 0 8px 20px -6px rgba(6, 182, 212, 0.4); }
-    .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 8px 20px -6px rgba(239, 68, 68, 0.4); }
-    .btn-secondary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4); }
+    .clock { font-size: 38px; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 4px; }
+    .date { font-size: 14px; color: #94a3b8; margin-bottom: 24px; font-weight: 600; }
 
-    .toggle-link { color: #94a3b8; font-size: 13px; cursor: pointer; margin-top: 16px; display: inline-block; font-weight: 600; }
-    .toggle-link:hover { color: #38bdf8; text-decoration: underline; }
-    .loading { opacity: 0.5; pointer-events: none; }
+    select, input {
+      width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px 16px; margin-bottom: 12px; border-radius: 12px; color: #ffffff; font-size: 15px; outline: none;
+    }
+    select:focus, input:focus { border-color: #6366f1; }
 
-    /* Zone d'historique */
-    .history-box {
-      margin-top: 20px; padding: 14px; background: rgba(15, 23, 42, 0.5); 
-      border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.05); text-align: left;
+    .actions-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;
     }
-    .history-title { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; }
-    .history-item { 
-      font-size: 12px; display: flex; justify-content: space-between; align-items: center; 
-      padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); 
+
+    .btn {
+      width: 100%; padding: 14px 12px; border-radius: 12px; border: none;
+      font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .history-item:last-child { border-bottom: none; }
-    .tag { font-weight: 700; padding: 2px 6px; border-radius: 6px; font-size: 10px; }
-    .tag-START { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .tag-PAUSE { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-    .tag-RESUME { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
-    .tag-STOP { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-start { background: linear-gradient(135deg, #10b981, #059669); color: white; grid-column: span 2; }
+    .btn-pause { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .btn-resume { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
+    .btn-stop { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; grid-column: span 2; }
+
+    .btn-admin {
+      background: transparent; color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); margin-top: 20px; font-size: 13px;
+    }
+    .btn-admin:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.3); }
+
+    .message { margin-top: 16px; font-size: 13px; font-weight: 600; padding: 10px; border-radius: 8px; display: none; }
+    .msg-error { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .msg-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
   </style>
 </head>
 <body>
 
-  <div class="card" id="mainCard">
-    <div class="logo-icon">💊</div>
-    <h2>PHARMACIE</h2>
-    <div id="statusBadge" class="status-badge offline"><span class="dot"></span> Hors Service</div>
+  <div class="container">
+    <div class="card">
+      <div id="badgeStatus" class="badge-status status-hors-service">● HORAILLES / HORS SERVICE</div>
+      
+      <div class="clock" id="liveClock">00:00:00</div>
+      <div class="date" id="liveDate">Chargement...</div>
 
-    <!-- 1. CONNEXION -->
-    <div id="loginForm">
-      <select id="selectEmploye">
-        <option value="">Chargement de l'équipe...</option>
+      <!-- SÉLECTION EMPLOYÉ & PIN -->
+      <select id="employeSelect" onchange="rafraichirEtatBoutons()">
+        <option value="">-- Sélectionnez votre nom --</option>
       </select>
-      <input type="password" id="inputPin" placeholder="Code PIN (4 chiffres)" maxlength="4" inputmode="numeric">
-      <button class="btn-start" onclick="validerIdentite()">Se Connecter ➔</button>
-      <span class="toggle-link" onclick="afficherFormulaire('registerForm')">+ Inscrire un nouvel employé</span>
-      
-      <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
-        <a href="admin.html" style="color: #64748b; font-size: 12px; text-decoration: none; font-weight: 600;">
-          🔒 Espace Direction
-        </a>
-      </div>
-    </div>
 
-    <!-- 2. INSCRIPTION -->
-    <div id="registerForm" style="display: none;">
-      <input type="text" id="regNom" placeholder="Nom">
-      <input type="text" id="regPrenom" placeholder="Prénom">
-      <input type="password" id="regPin" placeholder="Créer un PIN (4 chiffres)" maxlength="4" inputmode="numeric">
-      <button class="btn-secondary" onclick="creerCompte()">Créer mon compte ✓</button>
-      <span class="toggle-link" onclick="afficherFormulaire('loginForm')">← Retour à la connexion</span>
-    </div>
+      <input type="password" id="pinInput" placeholder="Code PIN (ex: 1234)" maxlength="4" inputmode="numeric">
 
-    <!-- 3. ACTIONS ET HISTORIQUE -->
-    <div id="actionForm" style="display: none;">
-      <p id="welcomeMsg" style="font-weight: 700; font-size: 16px; color: #38bdf8; margin-bottom: 16px;"></p>
-      
-      <button class="btn-start" onclick="verifierPositionEtPointer('START', 'MANUEL')">▶ Prise de Service (START)</button>
-      
-      <div class="btn-grid">
-        <button class="btn-pause" onclick="verifierPositionEtPointer('PAUSE', 'MANUEL')">⏸️ Pause</button>
-        <button class="btn-resume" onclick="verifierPositionEtPointer('RESUME', 'MANUEL')">▶️ Reprise</button>
+      <!-- BOUTONS D'ACTION (START, PAUSE, REPRISE, STOP) -->
+      <div class="actions-grid">
+        <button id="btnStart" class="btn btn-start" onclick="enregistrerPointage('START')">▶ Prise de Service</button>
+        <button id="btnPause" class="btn btn-pause" onclick="enregistrerPointage('PAUSE')">⏸ Pause</button>
+        <button id="btnResume" class="btn btn-resume" onclick="enregistrerPointage('RESUME')">▶️ Reprise</button>
+        <button id="btnStop" class="btn btn-stop" onclick="enregistrerPointage('STOP')">⏹ Fin de Service</button>
       </div>
 
-      <button class="btn-stop" onclick="verifierPositionEtPointer('STOP', 'MANUEL')">⏹ Fin de Service (STOP)</button>
+      <div id="msgBox" class="message"></div>
 
-      <!-- HISTORIQUE DU JOUR -->
-      <div class="history-box">
-        <div class="history-title">⏱️ Mes derniers pointages</div>
-        <div id="historyList">
-          <div style="font-size: 12px; color: #64748b; text-align: center;">Aucun pointage récent</div>
-        </div>
-      </div>
-
-      <span class="toggle-link" onclick="location.reload()">← Déconnexion</span>
+      <button class="btn btn-admin" onclick="window.location.href='admin.html'">🔒 Espace Direction</button>
     </div>
   </div>
 
   <script>
-    const API_ENDPOINT = "/.netlify/functions/pointage";
-    
     // ==========================================
-    // 📍 CONFIGURATION GPS PHARMACIE (Google Maps)
+    // 📍 CONFIGURATION GPS PHARMACIE
     // ==========================================
     const PHARMACIE_LAT = 5.3296667;  // Latitude
     const PHARMACIE_LNG = -4.0776944; // Longitude
-    const RAYON_MAX_METRES = 50;     // Distance autorisée (50 mètres)
+    const RAYON_MAX_METRES = 50;     // Distance autorisée en mètres
 
-    let employesData = [];
-    let pointagesData = [];
-    let employeActuel = null;
+    const API_ENDPOINT = "/.netlify/functions/pointage";
+    let globalData = { employes: [], pointages: [] };
 
-    function afficherFormulaire(formId) {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('registerForm').style.display = 'none';
-      document.getElementById('actionForm').style.display = 'none';
-      document.getElementById(formId).style.display = 'block';
-    }
-
-    async function initialiser() {
-      try {
-        const res = await fetch(API_ENDPOINT);
-        if (!res.ok) throw new Error("Erreur serveur Netlify.");
-        
-        const data = await res.json();
-        employesData = data.employes || [];
-        pointagesData = data.pointages || [];
-
-        const select = document.getElementById('selectEmploye');
-        select.innerHTML = '<option value="">-- Sélectionnez votre nom --</option>';
-        
-        if (employesData.length === 0) {
-          select.innerHTML = '<option value="">Aucun employé enregistré</option>';
-          return;
-        }
-
-        employesData.forEach(e => {
-          let opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = `${e.prenom} ${e.nom}`;
-          select.appendChild(opt);
+    // Horloge en direct
+    function demarrerHorloge() {
+      const maj = () => {
+        const maintenant = new Date();
+        document.getElementById('liveClock').textContent = maintenant.toLocaleTimeString('fr-FR');
+        document.getElementById('liveDate').textContent = maintenant.toLocaleDateString('fr-FR', { 
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
         });
-      } catch (e) {
-        console.error(e);
-        alert("Erreur de chargement des données.");
-      }
+      };
+      maj();
+      setInterval(maj, 1000);
     }
 
-    async function creerCompte() {
-      const nom = document.getElementById('regNom').value.trim();
-      const prenom = document.getElementById('regPrenom').value.trim();
-      const pin = document.getElementById('regPin').value.trim();
-
-      if (!nom || !prenom || pin.length !== 4 || isNaN(pin)) {
-        return alert("Renseigne un nom, prénom et PIN à 4 chiffres.");
-      }
-
-      document.getElementById('mainCard').classList.add('loading');
-
-      try {
-        const res = await fetch(API_ENDPOINT);
-        const data = await res.json();
-
-        if (!data.employes) data.employes = [];
-
-        const nouvelId = data.employes.length > 0 ? Math.max(...data.employes.map(e => e.id)) + 1 : 1;
-        data.employes.push({ id: nouvelId, nom, prenom, pin, heures_contrat: 160 });
-
-        await fetch(API_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: `Inscription ${prenom} ${nom}`,
-            data: data
-          })
-        });
-
-        alert("Compte créé avec succès ! Connecte-toi à présent.");
-        document.getElementById('regNom').value = '';
-        document.getElementById('regPrenom').value = '';
-        document.getElementById('regPin').value = '';
-        
-        await initialiser();
-        afficherFormulaire('loginForm');
-
-      } catch (err) {
-        alert(`Erreur : ${err.message}`);
-      } finally {
-        document.getElementById('mainCard').classList.remove('loading');
-      }
-    }
-
-    function validerIdentite() {
-      const id = parseInt(document.getElementById('selectEmploye').value);
-      const pin = document.getElementById('inputPin').value;
-
-      if (!id) return alert("Choisis ton nom dans la liste.");
-
-      const user = employesData.find(e => e.id === id && String(e.pin) === String(pin));
-
-      if (user) {
-        employeActuel = user;
-        afficherFormulaire('actionForm');
-        document.getElementById('welcomeMsg').textContent = `Bonjour ${user.prenom} 👋`;
-        rafraichirHistorique();
-      } else {
-        alert("Code PIN incorrect !");
-      }
-    }
-
-    function formaterDateHeure(isoString) {
-      const date = new Date(isoString);
-      return date.toLocaleString('fr-FR', {
-        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
-      });
-    }
-
-    function rafraichirHistorique() {
-      if (!employeActuel) return;
-
-      const mesPointages = pointagesData
-        .filter(p => p.employe_id === employeActuel.id)
-        .reverse();
-
-      const listDiv = document.getElementById('historyList');
-      const badge = document.getElementById('statusBadge');
-
-      if (mesPointages.length === 0) {
-        listDiv.innerHTML = `<div style="font-size: 12px; color: #64748b; text-align: center;">Aucun pointage enregistré</div>`;
-        badge.innerHTML = `<span class="dot"></span> Hors Service`;
-        badge.className = "status-badge offline";
-        return;
-      }
-
-      const dernier = mesPointages[0];
-      if (dernier.action === 'START' || dernier.action === 'RESUME') {
-        badge.innerHTML = `<span class="dot"></span> En Service`;
-        badge.className = "status-badge online";
-      } else if (dernier.action === 'PAUSE') {
-        badge.innerHTML = `<span class="dot"></span> En Pause`;
-        badge.className = "status-badge in-pause";
-      } else {
-        badge.innerHTML = `<span class="dot"></span> Hors Service`;
-        badge.className = "status-badge offline";
-      }
-
-      let html = '';
-      const libelles = { 'START': 'Prise de service', 'PAUSE': 'Pause', 'RESUME': 'Reprise', 'STOP': 'Fin de service' };
-
-      mesPointages.slice(0, 5).forEach(p => {
-        html += `
-          <div class="history-item">
-            <span class="tag tag-${p.action}">${libelles[p.action] || p.action}</span>
-            <span style="color: #cbd5e1;">${formaterDateHeure(p.timestamp)}</span>
-          </div>
-        `;
-      });
-
-      listDiv.innerHTML = html;
-    }
-
+    // Calcul de la distance GPS (Formule de Haversine)
     function calculerDistanceMetres(lat1, lon1, lat2, lon2) {
-      const R = 6371e3;
-      const φ1 = lat1 * Math.PI / 180;
-      const φ2 = lat2 * Math.PI / 180;
-      const Δφ = (lat2 - lat1) * Math.PI / 180;
-      const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
 
-    function verifierPositionEtPointer(action, mode) {
-      if (!navigator.geolocation) {
-        alert("La géolocalisation n'est pas activée sur ce navigateur.");
+    // Chargement initial des données
+    async function initialiser() {
+      demarrerHorloge();
+      try {
+        const res = await fetch(API_ENDPOINT);
+        if (!res.ok) throw new Error("Impossible de se connecter au serveur.");
+        
+        globalData = await res.json();
+        remplirSelectEmployes();
+      } catch (err) {
+        afficherMessage(`Erreur : ${err.message}`, true);
+      }
+    }
+
+    function remplirSelectEmployes() {
+      const select = document.getElementById('employeSelect');
+      select.innerHTML = '<option value="">-- Sélectionnez votre nom --</option>';
+      
+      (globalData.employes || []).forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `${e.prenom} ${e.nom}`;
+        select.appendChild(opt);
+      });
+    }
+
+    // Gestion visuelle du statut et de l'activation des boutons
+    function rafraichirEtatBoutons() {
+      const empId = parseInt(document.getElementById('employeSelect').value);
+      const badge = document.getElementById('badgeStatus');
+      
+      if (!empId) {
+        badge.className = "badge-status status-hors-service";
+        badge.textContent = "● SÉLECTIONNEZ UN EMPLOYÉ";
         return;
       }
 
-      document.getElementById('mainCard').classList.add('loading');
+      // Dernier mouvement de cet employé
+      const pointagesEmp = (globalData.pointages || [])
+        .filter(p => p.employe_id === empId)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      const dernierPointage = pointagesEmp.length > 0 ? pointagesEmp[pointagesEmp.length - 1] : null;
+      const dernierAction = dernierPointage ? dernierPointage.action : 'STOP';
+
+      if (dernierAction === 'START' || dernierAction === 'RESUME') {
+        badge.className = "badge-status status-en-service";
+        badge.textContent = "● EN SERVICE";
+      } else if (dernierAction === 'PAUSE') {
+        badge.className = "badge-status status-en-pause";
+        badge.textContent = "⏸ EN PAUSE";
+      } else {
+        badge.className = "badge-status status-hors-service";
+        badge.textContent = "● HORS SERVICE";
+      }
+    }
+
+    // Enregistrement d'une action
+    async function enregistrerPointage(action) {
+      const empId = parseInt(document.getElementById('employeSelect').value);
+      const pin = document.getElementById('pinInput').value.trim();
+
+      if (!empId) return afficherMessage("Veuillez sélectionner votre nom.", true);
+      if (!pin) return afficherMessage("Veuillez saisir votre code PIN.", true);
+
+      afficherMessage("Vérification de la position GPS...", false);
+
+      // 1. Vérification GPS
+      if (!navigator.geolocation) {
+        return afficherMessage("La géolocalisation n'est pas supportée par votre navigateur.", true);
+      }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userLat = position.coords.latitude;
-          const userLng = position.coords.longitude;
+        async (pos) => {
+          const dist = calculerDistanceMetres(
+            PHARMACIE_LAT, PHARMACIE_LNG, 
+            pos.coords.latitude, pos.coords.longitude
+          );
 
-          const distance = calculerDistanceMetres(userLat, userLng, PHARMACIE_LAT, PHARMACIE_LNG);
+          if (dist > RAYON_MAX_METRES) {
+            return afficherMessage(`Pointage refusé : vous êtes à ${Math.round(dist)}m de la pharmacie (max autorisé : ${RAYON_MAX_METRES}m).`, true);
+          }
 
-          if (distance <= RAYON_MAX_METRES) {
-            enregistrerPointage(action, mode);
-          } else {
-            document.getElementById('mainCard').classList.remove('loading');
-            alert(`❌ Pointage refusé !\n\nVous êtes à ${Math.round(distance)} mètres de la pharmacie.\nVous devez être sur place (max ${RAYON_MAX_METRES}m) pour valider votre pointage.`);
+          // 2. Envoi au serveur
+          try {
+            afficherMessage("Enregistrement en cours...", false);
+            const res = await fetch(API_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                employe_id: empId,
+                pin: pin,
+                action: action,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude
+              })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Erreur lors de l'enregistrement.");
+
+            afficherMessage(`Succès ! Action (${action}) enregistrée avec succès.`, false);
+            document.getElementById('pinInput').value = '';
+            
+            // Recharger les données pour rafraîchir le statut
+            const refreshRes = await fetch(API_ENDPOINT);
+            globalData = await refreshRes.json();
+            rafraichirEtatBoutons();
+
+          } catch (err) {
+            afficherMessage(`Erreur : ${err.message}`, true);
           }
         },
-        (error) => {
-          document.getElementById('mainCard').classList.remove('loading');
-          alert("⚠️ Position introuvable : Veuillez activer le GPS sur votre appareil.");
+        (err) => {
+          afficherMessage("Veuillez autoriser l'accès à la position GPS pour pouvoir pointer.", true);
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
 
-    async function enregistrerPointage(action, mode) {
-      if (!employeActuel) return;
-
-      try {
-        const res = await fetch(API_ENDPOINT);
-        const data = await res.json();
-
-        if (!data.pointages) data.pointages = [];
-        
-        const nouveauPointage = {
-          employe_id: employeActuel.id, 
-          action: action, 
-          mode: mode, 
-          timestamp: new Date().toISOString()
-        };
-
-        data.pointages.push(nouveauPointage);
-        pointagesData = data.pointages;
-
-        await fetch(API_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: `Pointage ${action} - ${employeActuel.prenom}`,
-            data: data
-          })
-        });
-
-        rafraichirHistorique();
-        const heureAffichee = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        alert(`✓ Pointage [${action}] enregistré à ${heureAffichee}`);
-
-      } catch (err) {
-        alert(`Erreur : ${err.message}`);
-      } finally {
-        document.getElementById('mainCard').classList.remove('loading');
-      }
+    function afficherMessage(txt, estErreur) {
+      const box = document.getElementById('msgBox');
+      box.style.display = 'block';
+      box.className = `message ${estErreur ? 'msg-error' : 'msg-success'}`;
+      box.textContent = txt;
     }
 
-    initialiser();
+    window.onload = initialiser;
   </script>
 </body>
 </html>
