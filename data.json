@@ -1,43 +1,4 @@
 {
-  "employes": [
-    {
-      "id": 1,
-      "nom": "d",
-      "prenom": "d",
-      "pin": "1234",
-      "heures_contrat": 160
-    }
-  ],
-  "pointages": [
-    {
-      "employe_id": 1,
-      "action": "START",
-      "mode": "MANUEL",
-      "timestamp": "2026-08-12T22:45:59.146Z"
-    },
-    {
-      "employe_id": 1,
-      "action": "STOP",
-      "mode": "MANUEL",
-      "timestamp": "2026-08-12T22:46:08.385Z"
-    },
-    {
-      "employe_id": 1,
-      "action": "STOP",
-      "mode": "MANUEL",
-      "timestamp": "2026-08-12T22:49:11.979Z"
-    },
-    {
-      "employe_id": 1,
-      "action": "START",
-      "mode": "MANUEL",
-      "timestamp": "2026-08-12T23:11:32.431Z"
-    },
-    {
-      "employe_id": 1,
-      "action": "STOP",
-      "mode": "MANUEL",
-      "timestamp": "2026-08-12T23:11:38.430Z"
-    }
-  ]
+  "employes": [],
+  "pointages": []
 }
